@@ -1,0 +1,251 @@
+\documentclass[18pt, a3paper, landscape, margin=2mm, innermargin=2mm, blockverticalspace=2mm, colspace=5mm]{tikzposter}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsfonts, physics}
+
+\usetheme{Basic}
+\usecolorstyle{Default}
+
+\colorlet{backgroundcolor}{white}
+\colorlet{blocktitlebgcolor}{black!10}
+\colorlet{blocktitlefgcolor}{black}
+\colorlet{blockbodybgcolor}{white}
+\colorlet{blockbodyfgcolor}{black}
+
+\title{\vspace{-1.5cm}\parbox{\linewidth}{\centering \Big 
+A Rigorous and Stable Implementation of the \\
+Crank--Nicolson Method for the TDSE
+}}
+\begin{document}
+\makeatletter
+\setlength{\TP@titleinnersep}{0pt}   % removes inner padding
+\setlength{\TP@titletotopverticalspace}{0pt} % removes top gap
+\setlength{\TP@titletoblockverticalspace}{1mm} % adjust spacing after title
+\makeatother
+\maketitle
+
+\begin{columns}
+% ==================== COLUMN 1 ====================
+\column{0.33}
+
+\block{1. Physical Problem: Time Evolution in Quantum Mechanics}{
+The time-dependent Schr\"odinger equation (TDSE) governs the evolution of quantum states:
+\begin{equation}
+i\hbar \frac{\partial \Psi(x,t)}{\partial t}
+=
+\left[
+-\frac{\hbar^2}{2m}\frac{\partial^2}{\partial x^2} + V(x)
+\right]\Psi(x,t)
+\end{equation}
+
+\textbf{Key Requirement:} The total probability must be conserved:
+\[
+\int |\Psi(x,t)|^2 dx = 1
+\]
+
+\textbf{Interpretation:}
+\begin{itemize}
+\item The Hamiltonian $\hat{H}$ controls energy + dynamics
+\item Evolution must be \textbf{unitary}
+\item Numerical methods must preserve norm (very important!)
+\end{itemize}
+}
+
+\block{2. Discretization of Space and Time}{
+We discretize:
+\[
+x_j = j\Delta x, \quad t_n = n\Delta t
+\]
+
+Second derivative (central difference):
+\begin{equation}
+\frac{\partial^2 \Psi}{\partial x^2}
+\approx
+\frac{\Psi_{j+1}^n - 2\Psi_j^n + \Psi_{j-1}^n}{(\Delta x)^2}
+\end{equation}
+
+\textbf{Result:} PDE $\rightarrow$ System of algebraic equations
+
+\textbf{Insight:}
+\begin{itemize}
+\item Smaller $\Delta x$ → higher spatial accuracy
+\item Smaller $\Delta t$ → better temporal resolution
+\item Tradeoff: accuracy vs computational cost
+\end{itemize}
+}
+
+\block{3. Why Standard Methods Fail}{
+\textbf{FTCS (Explicit Method):}
+\begin{itemize}
+\item Easy to implement
+\item But \textbf{unconditionally unstable}
+\item Amplifies numerical noise → blows up
+\end{itemize}
+
+\textbf{BTCS (Implicit Method):}
+\begin{itemize}
+\item Stable
+\item But introduces \textbf{artificial damping}
+\item Violates quantum probability conservation
+\end{itemize}
+
+\textbf{Conclusion:}
+We need a method that is:
+\begin{itemize}
+\item Stable
+\item Accurate
+\item Norm-preserving
+\end{itemize}
+}
+
+% ==================== COLUMN 2 ====================
+\column{0.34}
+
+\block{4. Crank–Nicolson Scheme}{
+The Crank–Nicolson method averages FTCS and BTCS:
+
+\begin{equation}
+i\hbar \frac{\Psi^{n+1}_j - \Psi^n_j}{\Delta t}
+=
+\frac{1}{2}\hat{H}_{FD}\Psi^{n+1}_j
++
+\frac{1}{2}\hat{H}_{FD}\Psi^n_j
+\end{equation}
+
+Rewriting:
+\begin{equation}
+\left( I + \frac{i\Delta t}{2\hbar}H \right)\Psi^{n+1}
+=
+\left( I - \frac{i\Delta t}{2\hbar}H \right)\Psi^n
+\end{equation}
+
+\textbf{Key Idea:}
+\begin{itemize}
+\item Implicit + symmetric in time
+\item Second-order accurate in both space and time
+\end{itemize}
+}
+
+\block{5. Unitarity and Stability}{
+Define propagator:
+\[
+U_{CN} = (I + i\gamma H)^{-1}(I - i\gamma H)
+\]
+
+This is a \textbf{Cayley transform} of a Hermitian operator.
+
+\textbf{Result:}
+\[
+U^\dagger U = I
+\]
+
+\textbf{Implications:}
+\begin{itemize}
+\item Exact probability conservation
+\item No artificial damping
+\item No instability
+\end{itemize}
+
+\textbf{This is why CN is the gold standard for TDSE.}
+}
+
+\block{6. Matrix Formulation}{
+Let:
+\[
+\alpha = \frac{i\Delta t}{2\hbar}, \quad
+\beta = \frac{\hbar^2}{2m(\Delta x)^2}
+\]
+
+Hamiltonian becomes:
+\[
+H\Psi_j = -\beta\Psi_{j-1} + (2\beta + V_j)\Psi_j - \beta\Psi_{j+1}
+\]
+
+We obtain:
+\[
+A\Psi^{n+1} = B\Psi^n
+\]
+
+\textbf{Important:}
+\begin{itemize}
+\item $A$, $B$ are tridiagonal
+\item Only nearest-neighbour coupling
+\end{itemize}
+}
+
+% ==================== COLUMN 3 ====================
+\column{0.34}
+
+\block{7. Efficient Solution: Thomas Algorithm}{
+Instead of inverting matrices:
+
+\[
+\mathcal{O}(N^3) \rightarrow \mathcal{O}(N)
+\]
+
+\textbf{Thomas Algorithm Steps:}
+\begin{enumerate}
+\item Forward elimination
+\item Modify coefficients
+\item Back substitution
+\end{enumerate}
+
+\textbf{Why it works:}
+\begin{itemize}
+\item Exploits tridiagonal structure
+\item No unnecessary computations
+\end{itemize}
+}
+
+\block{8. Boundary Conditions}{
+\textbf{Dirichlet (Infinite Well):}
+\[
+\Psi_0 = \Psi_N = 0
+\]
+
+\textbf{Periodic:}
+\[
+\Psi_0 = \Psi_{N-1}
+\]
+
+\textbf{Physical Meaning:}
+\begin{itemize}
+\item Dirichlet → particle confined
+\item Periodic → lattice / solid-state physics
+\end{itemize}
+}
+
+\block{9. Algorithm Summary (Implementation)}{
+\textbf{Step-by-step:}
+
+\begin{enumerate}
+\item Initialize $\Psi(x,0)$
+\item Construct matrices $A$, $B$
+\item For each time step:
+\begin{itemize}
+\item Compute RHS: $B\Psi^n$
+\item Solve $A\Psi^{n+1} = RHS$
+\item Normalize (optional check)
+\end{itemize}
+\item Repeat
+\end{enumerate}
+
+\textbf{Output:} Time evolution of wavefunction
+}
+
+\block{10. Applications}{
+\begin{itemize}
+\item Quantum tunneling
+\item Wave packet propagation
+\item Quantum wells and barriers
+\end{itemize}
+
+\textbf{Takeaway:}
+Crank–Nicolson provides a perfect balance of:
+\begin{center}
+\textbf{Accuracy + Stability + Physical Correctness}
+\end{center}
+}
+
+\end{columns}
+\end{document}
