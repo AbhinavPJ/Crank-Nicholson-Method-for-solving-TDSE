@@ -84,7 +84,7 @@ sim_configs = [
     },
 ]
 plot_margin = 5.0
-T0=1
+T0=1.7
 time_steps = int(T0 / dt)
 fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
 axes = axes.flatten()
@@ -118,8 +118,16 @@ fig.tight_layout()
 def update(frame):
     updated = []
     if frame == 0:
+        for ax in axes:
+            for txt in ax.texts:
+                txt.remove()
         for state in sim_states:
             state["psi"] = state["psi_init"].copy()
+    if frame == 320:
+        for state in sim_states:
+            for ax in axes:
+                ax.text(0.5, 0.5, "Reversing Time", transform=ax.transAxes, fontsize=16, color="#ff5555", ha="center", va="center", alpha=0.8)
+            state["psi"] = np.conj(state["psi"])
     for state in sim_states:
         for _ in range(steps_per_frame):
             d = state["B"].dot(state["psi"])
@@ -132,7 +140,7 @@ ani = animation.FuncAnimation(
     update,
     frames=time_steps,
     interval=10,
-    blit=True,
+    blit=False,
     repeat=True
 )
 # writer = FFMpegWriter(fps=60)
