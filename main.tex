@@ -1,73 +1,66 @@
 % ============================================================
-%  Poster : Crank–Nicolson Method for the TDSE
+%  Poster : Crank-Nicolson Method for the TDSE
 %  Engine : pdflatex  |  Class: tikzposter
 %  Size: A0 landscape
 % ============================================================
-\documentclass[20pt, a0paper, landscape, margin=0mm,
-               innermargin=6mm, blockverticalspace=5mm,
-               colspace=7mm, subcolspace=3mm]{tikzposter}
+\documentclass[20pt, a0paper, landscape]{tikzposter}
 
-% ── Core packages ───────────────────────────────────────────
-\usepackage[utf8]{inputenc}
+% == Core packages ===========================================
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage{amsmath,amssymb,amsfonts,bm,mathtools}
-\usepackage{physics}
-\usepackage{xcolor}
-\usepackage{tikz}
+\usepackage{amsmath,amssymb,bm,mathtools}
 \usepackage{booktabs}
 \usepackage{array}
-\usepackage{microtype}
 \usetikzlibrary{arrows.meta, shapes.geometric, positioning,
                 fit, calc, decorations.pathreplacing, shadows}
 
-% ════════════════════════════════════════════════════════════
-%  COLOUR PALETTE  –  "Cosmic Midnight"
-% ════════════════════════════════════════════════════════════
+% ============================================================
+%  COLOUR PALETTE  -  "Paper Daylight"
+% ============================================================
 %  Backgrounds
-\definecolor{BgPage}      {HTML}{04090F}   % near-black cosmos
-\definecolor{BgBlock}     {HTML}{0B1626}   % deep navy block body
-\definecolor{BgTitle}     {HTML}{0D2540}   % cobalt block title
-\definecolor{BgInnerT}    {HTML}{0B3B3B}   % dark teal inner-title
-\definecolor{BgInner}     {HTML}{061322}   % darkest inner body
+\definecolor{BgPage}      {HTML}{F8F7F2}   % warm paper
+\definecolor{BgBlock}     {HTML}{FFFFFF}   % clean white
+\definecolor{BgTitle}     {HTML}{E7EEF7}   % cool mist blue
+\definecolor{BgInnerT}    {HTML}{EFE7D8}   % warm sand
+\definecolor{BgInner}     {HTML}{F6F4EF}   % soft paper
 %  Text
-\definecolor{TxtMain}     {HTML}{D6EAF8}   % cool near-white
-\definecolor{TxtDim}      {HTML}{8AB4D4}   % muted steel-blue
+\definecolor{TxtMain}     {HTML}{1B1E23}   % near-black
+\definecolor{TxtDim}      {HTML}{4B5563}   % muted graphite
 %  Accents
-\definecolor{Aqua}        {HTML}{00D4FF}   % electric cyan  (primary)
-\definecolor{Gold}        {HTML}{FFD166}   % warm gold      (equations)
-\definecolor{Mint}        {HTML}{06D6A0}   % emerald-mint   (success)
-\definecolor{Coral}       {HTML}{EF476F}   % coral-red      (failure/alert)
-\definecolor{Lavender}    {HTML}{C77DFF}   % violet         (Cayley)
-\definecolor{TitleLine1}  {HTML}{67E8F9}   % sky-cyan title
-\definecolor{TitleLine2}  {HTML}{FFD166}   % gold subtitle
+\definecolor{Aqua}        {HTML}{0F6FA6}   % deep blue
+\definecolor{Gold}        {HTML}{B88300}   % muted gold
+\definecolor{Mint}        {HTML}{0F7A5B}   % deep green
+\definecolor{Coral}       {HTML}{B4433E}   % brick red
+\definecolor{Lavender}    {HTML}{5D5CCF}   % subdued violet
+\definecolor{TitleLine1}  {HTML}{0F6FA6}   % title blue
+\definecolor{TitleLine2}  {HTML}{7A4E00}   % title gold
 
-% ── tikzposter color wiring ──────────────────────────────────
+% == tikzposter color wiring =================================
 \usetheme{Default}
 
-\definecolorstyle{CosmicStyle}{}{
+\definecolorstyle{PaperStyle}{}{
   \colorlet{backgroundcolor}    {BgPage}
   \colorlet{framecolor}         {Aqua}
   \colorlet{titlefgcolor}       {TxtMain}
   \colorlet{titlebgcolor}       {BgTitle}
   \colorlet{blocktitlebgcolor}  {BgTitle}
-  \colorlet{blocktitlefgcolor}  {Aqua}
+  \colorlet{blocktitlefgcolor}  {TxtMain}
   \colorlet{blockbodybgcolor}   {BgBlock}
   \colorlet{blockbodyfgcolor}   {TxtMain}
   \colorlet{innerblocktitlebgcolor}{BgInnerT}
-  \colorlet{innerblocktitlefgcolor}{Mint}
+  \colorlet{innerblocktitlefgcolor}{TxtMain}
   \colorlet{innerblockbodybgcolor} {BgInner}
   \colorlet{innerblockbodyfgcolor} {TxtMain}
-  \colorlet{notefgcolor}        {BgPage}
+  \colorlet{notefgcolor}        {TxtMain}
   \colorlet{notebgcolor}        {Gold}
   \colorlet{noteframecolor}     {Gold}
 }
-\usecolorstyle{CosmicStyle}
+\usecolorstyle{PaperStyle}
 \usetitlestyle{Filled}
 \useblockstyle{Slide}
 \useinnerblockstyle{Table}
 
-% ── Title ─────────────────────────────────────────────────────
+% == Title ===================================================
 \settitle{
   \centering\vspace{3mm}
   {\bfseries\fontsize{54}{60}\selectfont\color{TitleLine1}
@@ -80,7 +73,7 @@
   \vspace{3mm}
 }
 
-% ── Macros ───────────────────────────────────────────────────
+% == Macros ==================================================
 \renewcommand{\Psi}{\varPsi}
 \newcommand{\dt}{\Delta t}
 \newcommand{\dx}{\Delta x}
@@ -88,23 +81,25 @@
 \newcommand{\bPsi}{\bm{\Psi}}
 \newcommand{\half}{\tfrac{1}{2}}
 
-% ── Suppress footer ──────────────────────────────────────────
-\tikzposterlatexaffectionproofoff
-
-% ════════════════════════════════════════════════════════════
+% == Reduce spacing above \innerblock ========================
+\NewCommandCopy{\oldinnerblock}{\innerblock}
+\renewcommand{\innerblock}[3][]{%
+  \par\vspace{-12mm}% <--- Adjust this negative value (-10mm, -15mm, etc.)
+  \oldinnerblock[#1]{#2}{#3}%
+}
+% ============================================================
 \begin{document}
 \maketitle[titletotopverticalspace=3mm,
-           titletoblockverticalspace=6mm,
-           titleinnersep=5mm]
+           titletoblockverticalspace=6mm]
 
-% ════════════════════════════════════════════════════════════
+% ============================================================
 \begin{columns}
-% ════════════════════════════════════════════════════════════
-%  COLUMN 1  (26%)  –  Physics & Discretization
-% ════════════════════════════════════════════════════════════
-\column{0.26}
+% ============================================================
+%  COLUMN 1  (26%)  -  Physics, Discretization & Euler Schemes
+% ============================================================
+\column{0.29}
 
-% ── 1. Physical Problem ─────────────────────────────────────
+% == 1. Physical Problem =====================================
 \block{1.\enspace The Physical Problem}{
 
 The \textbf{Time-Dependent Schr\"{o}dinger Equation} (TDSE) governs
@@ -116,7 +111,7 @@ quantum state evolution:
     + V(x)\right]\Psi(x,t)}
 \end{equation}
 
-\textbf{Formal solution} — time-evolution operator:
+\textbf{Formal solution} - time-evolution operator:
 \[
   \Psi(x,t{+}\dt) \;=\;
   \underbrace{e^{-i\hat{H}\dt/\hbar}}_{\displaystyle\hat{U}(\dt)}\,\Psi(x,t)
@@ -137,7 +132,7 @@ The computational challenge: approximate $e^{-i\hat{H}\dt/\hbar}$
 on a finite spatial grid while keeping the discrete propagator \emph{exactly} unitary.
 }
 
-% ── 2. Discretization ───────────────────────────────────────
+% == 2. Discretization =======================================
 \block{2.\enspace Space--Time Discretization}{
 
 Introduce a uniform grid with $N+1$ spatial and $M$ temporal points:
@@ -179,25 +174,20 @@ $\bPsi^n = [\Psi_1^n,\ldots,\Psi_{N-1}^n]^{\mathsf T}$:
 }
 }
 
-% ════════════════════════════════════════════════════════════
-%  COLUMN 2  (37%)  –  Why Methods Fail + CN Derivation
-% ════════════════════════════════════════════════════════════
-\column{0.37}
-
-% ── 3. Method Comparison ────────────────────────────────────
-\block{3.\enspace Why Euler Schemes Fail: Von Neumann Analysis}{
-
+% == 3. Method Comparison ====================================
+\block{3.\enspace Why Euler Schemes Fail}{
+{\raggedright
 \textbf{Stability test:} substitute $\Psi_j^n = g^n e^{ik j\dx}$
-(Fourier mode) into each scheme and compute amplification factor $g$.
+(Fourier mode) into each scheme and compute amplification factor~$g$.\par
+}
 \vspace{4mm}
 \begin{tikzpicture}[
   every node/.style={font=\normalsize},
   mbox/.style={draw, rounded corners=6pt, thick,
-               minimum height=3.2cm, text width=7.2cm,
+               minimum height=3.2cm, text width=8.5cm,
                align=left, inner sep=8pt},
-  % Stronger panel fill + dark body text (TxtMain on pale fill was invisible)
-  rbox/.style={mbox, draw=Coral, fill=Coral!42, text=BgPage},
-  gbox/.style={mbox, draw=Mint,  fill=Mint!38,  text=BgPage},
+  rbox/.style={mbox, draw=Coral, fill=Coral!25, text=TxtMain},
+  gbox/.style={mbox, draw=Mint,  fill=Mint!20,  text=TxtMain},
   arr/.style={-{Stealth[length=8pt]}, very thick},
 ]
   \node[rbox] (fe) {
@@ -223,75 +213,60 @@ $\bPsi^n = [\Psi_1^n,\ldots,\Psi_{N-1}^n]^{\mathsf T}$:
     \textbf{Exact norm conservation.}
   };
   \draw[arr, color=Aqua]  (fe.east) -- (be.west)
-    node[midway,above,font=\small,color=Aqua]{implicit};
+    node[midway,above,font=\small,color=Aqua]{};
   \draw[arr, color=Gold]  (be.east) -- (cn.west)
-    node[midway,above,font=\small,color=Gold]{symmetrize};
+    node[midway,above,font=\small,color=Gold]{};
 \end{tikzpicture}
 
 \vspace{2mm}
 Here $\lambda$ denotes any eigenvalue of $H_{FD}$; since $H_{FD}$ is
 real-symmetric all eigenvalues are real, so $|g|=1$ holds for
-\emph{every} mode simultaneously — unconditional stability.
+\emph{every} mode simultaneously - unconditional stability.
 }
 
-% ── 4. CN Derivation ────────────────────────────────────────
-\block{4.\enspace Crank--Nicolson: Derivation \& Cayley Transform}{
+% ============================================================
+%  COLUMN 2  (37%)  -  CN Derivation & Matrix Structure
+% ============================================================
+\column{0.34}
 
-Average the PDE right-hand side at levels $n$ and $n{+}1$:
-\begin{equation}
-  i\hbar\,\frac{\Psi_j^{n+1}-\Psi_j^n}{\dt}
-  \;=\;
-  \frac{1}{2}\!\left(H_{FD}\Psi_j^{n+1} + H_{FD}\Psi_j^n\right)
-  \label{eq:cn}
-\end{equation}
-Collect unknowns $(\Psi^{n+1})$ on the left, with
-$\gamma \equiv \dfrac{\dt}{2\hbar}$:
+% == 4. Operator Approximation ===============================
+\block{4.\enspace Pad\'e Approximants \& The Evolution Operator}{
 
-\vspace{1mm}
+The exact time-evolution operator is $\hat{U} = e^{-ix}$, where $x \equiv \hat{H}\dt/\hbar$. 
+Direct computation of the matrix exponential $e^{-i\hat{H}\dt/\hbar}$ is impractically expensive. 
+Instead, the Crank--Nicolson method employs the \textbf{Pad\'e [1,1] approximant}:
 \begin{equation}
-  \underbrace{\bigl(I + i\gamma H\bigr)}_{\displaystyle A}
-  \,\bPsi^{n+1}
-  \;=\;
-  \underbrace{\bigl(I - i\gamma H\bigr)}_{\displaystyle B}
-  \,\bPsi^{n}
-  \label{eq:linsys}
+  e^{-ix} \;\;\approx\;\; R(x) \;=\; \frac{1 - ix/2}{1 + ix/2} \quad \implies \quad U_{CN} = \left(I + i\frac{\dt}{2\hbar}H\right)^{\!-1}\!\left(I - i\frac{\dt}{2\hbar}H\right)
 \end{equation}
 
-\innerblock{\textbf{The Cayley Transform \& Unitarity Proof}}{
-The CN propagator is the \textcolor{Lavender}{\textbf{Cayley transform}} of $H$:
-\[
-  U_{CN} \;=\; A^{-1}B
-  \;=\; \frac{I - i\gamma H}{I + i\gamma H}
-\]
-Since $H$ is Hermitian: $\;A^\dagger = (I+i\gamma H)^\dagger = I-i\gamma H = B.$\\[4pt]
-Therefore:
-\[
-  \boxed{\; U_{CN}^\dagger\, U_{CN}
-  = B^\dagger (A^\dagger)^{-1} A^{-1} B
-  = A \cdot A^{-1} \cdot A^{-1} \cdot A \;=\; I\;}
-\]
-\[
-  \Longrightarrow\quad
-  \|\bPsi^{n+1}\|^2 = \|\bPsi^n\|^2
-  \qquad\textbf{(exact at every time step)}
-\]
-\textit{CN is the \textbf{unique} 2-level scheme that is both $\calO(\dt^2)$
-and exactly unitary.}
+\innerblock{\textbf{Taylor Series Matching (Order of Accuracy)}}{
+Let's compare their expansions for a small time step $x$:
+\begin{align*}
+  \textcolor{Aqua}{\text{Exact:}\quad e^{-ix}} &= 1 - ix - \frac{x^2}{2} + i\frac{x^3}{6} + \mathcal{O}(x^4) \\[4pt]
+  \textcolor{Gold}{\text{Pad\'e:}\quad R(x)} &= \left(1 - i\frac{x}{2}\right)\left(1 - i\frac{x}{2} - \frac{x^2}{4} + i\frac{x^3}{8} + \dots\right) \\
+  &= 1 - ix - \frac{x^2}{2} + i\frac{x^3}{4} + \mathcal{O}(x^4)
+\end{align*}
+The expressions \textbf{match exactly up to $\mathcal{O}(x^2)$}. The discrepancy begins at the $\mathcal{O}(x^3)$ term, meaning the local truncation error per step is $\mathcal{O}(\dt^3)$. This makes the method \textbf{globally 2nd-order accurate} in time.
 }
 
 \vspace{2mm}
-\textbf{Order of accuracy:}
-Taylor-expanding \eqref{eq:cn} gives local truncation error
-$\calO(\dt^2,\dx^2)$ — matching both spatial and temporal discretisations.
+\innerblock{\textbf{Unconditional Unitarity (Stability)}}{
+Why use a rational function instead of just truncating the Taylor series? For any real $x$ (since $\hat{H}$ is Hermitian, its eigenvalues are strictly real), the magnitude of the approximation is:
+\[
+  \boxed{\; |R(x)|^2 = R^*(x)R(x) = \left(\frac{1 + ix/2}{1 - ix/2}\right)\left(\frac{1 - ix/2}{1 + ix/2}\right) \equiv 1 \;}
+\]
+While a truncated Taylor polynomial will eventually drift off the unit circle (causing solutions to blow up or decay), the Padé [1,1] approximant maps the entire real line perfectly onto the unit circle in the complex plane. This mathematically guarantees that \textbf{probability is exactly conserved} regardless of the size of $\dt$.
+}
 }
 
-% ── 5. Matrix Structure ─────────────────────────────────────
+% == 5. Matrix Structure =====================================
 \block{5.\enspace Tridiagonal Matrix Structure of $A$ and $B$}{
 
 Let $r_j \equiv \gamma(2\beta+V_j)$ (diagonal) and $s \equiv \gamma\beta$
 (off-diagonal). The linear system \eqref{eq:linsys} reads:
 
-\[
+\begin{equation}
+\label{eq:linsys}
 \underbrace{
 \!\begin{pmatrix}
   1{+}ir_1 & -is      & 0        & \cdots & 0 \\
@@ -313,7 +288,7 @@ Let $r_j \equiv \gamma(2\beta+V_j)$ (diagonal) and $s \equiv \gamma\beta$
 \end{pmatrix}
 }_{B}\!
 \bPsi^{n}
-\]
+\end{equation}
 
 \begin{center}
 \begin{tikzpicture}[scale=0.9]
@@ -347,23 +322,23 @@ Let $r_j \equiv \gamma(2\beta+V_j)$ (diagonal) and $s \equiv \gamma\beta$
 \end{center}
 }
 
-% ════════════════════════════════════════════════════════════
-%  COLUMN 3  (37%)  –  Thomas Algorithm, Complexity, Summary
-% ════════════════════════════════════════════════════════════
+% ============================================================
+%  COLUMN 3  (37%)  -  Thomas Algorithm, Complexity, Summary
+% ============================================================
 \column{0.37}
 
-% ── 6. Thomas Algorithm ─────────────────────────────────────
-\block{6.\enspace Thomas Algorithm — $\calO(N)$ Tridiagonal Solver}{
+% == 6. Thomas Algorithm =====================================
+\block{6.\enspace Thomas Algorithm - $\calO(N)$ Tridiagonal Solver}{
 
 Naïve LU decomposition costs $\calO(N^3)$.
 The Thomas algorithm exploits the \textbf{tridiagonal structure} to achieve
-$\calO(N)$ with only $\approx 8N$ floating-point operations — no fill-in.
+$\calO(N)$ with only $\approx 8N$ floating-point operations - no fill-in.
 \medskip
 
 Let the system be $a_j\Psi_{j-1} + d_j\Psi_j + c_j\Psi_{j+1} = f_j$
 with $a_j = c_j = -is$, $d_j = 1+ir_j$.
 
-\innerblock{\textbf{Step 1 — Forward Sweep} (modify coefficients)}{
+\innerblock{\textbf{Step 1 - Forward Sweep} (modify coefficients)}{
 Initialise: $\tilde d_1 = d_1,\; \tilde f_1 = f_1$.\\[4pt]
 For $j = 2, 3, \ldots, N{-}1$:
 \[
@@ -377,7 +352,7 @@ Eliminates the sub-diagonal in $\calO(N)$ steps.
 }
 
 \vspace{2mm}
-\innerblock{\textbf{Step 2 — Back Substitution} (recover $\bPsi^{n+1}$)}{
+\innerblock{\textbf{Step 2 - Back Substitution} (recover $\bPsi^{n+1}$)}{
 \[
   \Psi_{N-1}^{n+1} = \frac{\tilde f_{N-1}}{\tilde d_{N-1}},
   \qquad
@@ -393,21 +368,20 @@ Eliminates the sub-diagonal in $\calO(N)$ steps.
 \begin{tikzpicture}[
   node distance=5mm,
   every node/.style={font=\normalsize},
-  step/.style={draw=Aqua, fill=BgBlock, rounded corners=5pt, thick,
+  flowstep/.style={draw=Aqua, fill=BgBlock, rounded corners=5pt, thick,
                text=TxtMain, minimum width=10cm, minimum height=9mm,
                align=center, drop shadow={color=Aqua!30}},
-  check/.style={step, draw=Gold, fill=BgBlock},
-  loop/.style={step, draw=Lavender, fill=BgBlock},
+  check/.style={flowstep, draw=Gold, fill=BgBlock},
+  loop/.style={flowstep, draw=Lavender, fill=BgBlock},
   arr/.style={-{Stealth[length=7pt]}, thick, color=Aqua},
 ]
-  \node[step]  (init) {Initialise $\Psi^0(x)$;\; build $A$, $B$ once};
-  \node[step, below=of init]  (rhs)  {Compute RHS $\bm f = B\bPsi^n$};
-  \node[step, below=of rhs]   (fwd)  {Forward sweep: update $\tilde d_j$, $\tilde f_j$};
-  \node[step, below=of fwd]   (bak)  {Back substitution $\Rightarrow \bPsi^{n+1}$};
-  \node[check, below=of bak]  (chk)  {(Optional) assert $\|\bPsi^{n+1}\|\approx 1$};
-  \node[loop, below=of chk]   (adv)  {Advance: $n \leftarrow n+1$;\quad store / plot};
+  \node[flowstep]  (init) {Initialise $\Psi^0(x)$;\; build $A$, $B$ once};
+  \node[flowstep, below=of init]  (rhs)  {Compute RHS $\bm f = B\bPsi^n$};
+  \node[flowstep, below=of rhs]   (fwd)  {Forward sweep: update $\tilde d_j$, $\tilde f_j$};
+  \node[flowstep, below=of fwd]   (bak)  {Back substitution $\Rightarrow \bPsi^{n+1}$};
+  \node[loop, below=of bak]   (adv)  {Advance: $n \leftarrow n+1$;\quad store / plot};
 
-  \foreach \a/\b in {init/rhs, rhs/fwd, fwd/bak, bak/chk, chk/adv}
+  \foreach \a/\b in {init/rhs, rhs/fwd, fwd/bak, bak/adv}
     \draw[arr] (\a) -- (\b);
 
   % loop-back arrow
@@ -420,7 +394,7 @@ Eliminates the sub-diagonal in $\calO(N)$ steps.
 \end{center}
 }
 
-% ── 7. Complexity Table ─────────────────────────────────────
+% == 7. Complexity Table =====================================
 \block{7.\enspace Method Comparison at a Glance}{
 
 \begin{center}
@@ -459,16 +433,16 @@ Eliminates the sub-diagonal in $\calO(N)$ steps.
 
 \vspace{1mm}
 CN with Thomas algorithm delivers the best possible combination:
-$\calO(N)$ cost, $\calO(\dt^2)$ accuracy, and exact unitarity — simultaneously.
+$\calO(N)$ cost, $\calO(\dt^2)$ accuracy, and exact unitarity - simultaneously.
 }
 
-% ── 8. Summary ──────────────────────────────────────────────
+% == 8. Summary ==============================================
 \block{8.\enspace Summary \& Physical Significance}{
 
 \innerblock{\textbf{Complete Crank--Nicolson Recipe}}{
   \begin{tabular}{@{} c @{\enspace} p{26.5cm}}
     \textcolor{Aqua}{\bfseries 1.} & \textbf{Grid:} choose $\dx$, $\dt$; set $\beta=\hbar^2/(2m\dx^2)$, $\gamma=\dt/(2\hbar)$.\\[3pt]
-    \textcolor{Aqua}{\bfseries 2.} & \textbf{Matrices:} build tridiagonal $A=(1{+}i\gamma H_{FD})$ and $B=(1{-}i\gamma H_{FD})$ — \emph{once}.\\[3pt]
+    \textcolor{Aqua}{\bfseries 2.} & \textbf{Matrices:} build tridiagonal $A=(1{+}i\gamma H_{FD})$ and $B=(1{-}i\gamma H_{FD})$ - \emph{once}.\\[3pt]
     \textcolor{Aqua}{\bfseries 3.} & \textbf{Time loop:} compute $\bm f = B\bPsi^n$; solve $A\bPsi^{n+1}=\bm f$ via Thomas Algorithm.\\[3pt]
     \textcolor{Aqua}{\bfseries 4.} & \textbf{Verify:} $\|\bPsi^{n+1}\|=1$ to machine precision (guaranteed by $U_{CN}$).
   \end{tabular}
@@ -484,9 +458,9 @@ $\calO(N)$ cost, $\calO(\dt^2)$ accuracy, and exact unitarity — simultaneously
   \item \textcolor{Mint}{\textbf{No dissipation:}}
         wave-packet shape and phase are preserved over arbitrarily long runs.
   \item \textcolor{Aqua}{\textbf{Second-order:}}
-        $\calO(\dt^2,\dx^2)$ — highest among two-level implicit schemes.
+        $\calO(\dt^2,\dx^2)$ - highest among two-level implicit schemes.
   \item \textcolor{Gold}{\textbf{Applications:}}
-        tunnelling, scattering, quantum wells, laser--matter interaction,
+        tunnelling, scattering, quantum wells, laser-matter interaction,
         spin dynamics, coupled-channel problems.
 \end{itemize}
 }
