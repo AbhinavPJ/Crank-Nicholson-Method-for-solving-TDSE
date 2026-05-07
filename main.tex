@@ -1,250 +1,495 @@
-\documentclass[18pt, a3paper, landscape, margin=2mm, innermargin=2mm, blockverticalspace=2mm, colspace=5mm]{tikzposter}
+% ============================================================
+%  Poster : Crank–Nicolson Method for the TDSE
+%  Engine : pdflatex  |  Class: tikzposter
+%  Size: A0 landscape
+% ============================================================
+\documentclass[20pt, a0paper, landscape, margin=0mm,
+               innermargin=6mm, blockverticalspace=5mm,
+               colspace=7mm, subcolspace=3mm]{tikzposter}
 
+% ── Core packages ───────────────────────────────────────────
 \usepackage[utf8]{inputenc}
-\usepackage{amsmath, amssymb, amsfonts, physics}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsfonts,bm,mathtools}
+\usepackage{physics}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{microtype}
+\usetikzlibrary{arrows.meta, shapes.geometric, positioning,
+                fit, calc, decorations.pathreplacing, shadows}
 
-\usetheme{Basic}
-\usecolorstyle{Default}
+% ════════════════════════════════════════════════════════════
+%  COLOUR PALETTE  –  "Cosmic Midnight"
+% ════════════════════════════════════════════════════════════
+%  Backgrounds
+\definecolor{BgPage}      {HTML}{04090F}   % near-black cosmos
+\definecolor{BgBlock}     {HTML}{0B1626}   % deep navy block body
+\definecolor{BgTitle}     {HTML}{0D2540}   % cobalt block title
+\definecolor{BgInnerT}    {HTML}{0B3B3B}   % dark teal inner-title
+\definecolor{BgInner}     {HTML}{061322}   % darkest inner body
+%  Text
+\definecolor{TxtMain}     {HTML}{D6EAF8}   % cool near-white
+\definecolor{TxtDim}      {HTML}{8AB4D4}   % muted steel-blue
+%  Accents
+\definecolor{Aqua}        {HTML}{00D4FF}   % electric cyan  (primary)
+\definecolor{Gold}        {HTML}{FFD166}   % warm gold      (equations)
+\definecolor{Mint}        {HTML}{06D6A0}   % emerald-mint   (success)
+\definecolor{Coral}       {HTML}{EF476F}   % coral-red      (failure/alert)
+\definecolor{Lavender}    {HTML}{C77DFF}   % violet         (Cayley)
+\definecolor{TitleLine1}  {HTML}{67E8F9}   % sky-cyan title
+\definecolor{TitleLine2}  {HTML}{FFD166}   % gold subtitle
 
-\colorlet{backgroundcolor}{white}
-\colorlet{blocktitlebgcolor}{black!10}
-\colorlet{blocktitlefgcolor}{black}
-\colorlet{blockbodybgcolor}{white}
-\colorlet{blockbodyfgcolor}{black}
+% ── tikzposter color wiring ──────────────────────────────────
+\usetheme{Default}
 
-\title{\vspace{-1.5cm}\parbox{\linewidth}{\centering \Big 
-A Rigorous and Stable Implementation of the \\
-Crank--Nicolson Method for the TDSE
-}}
+\definecolorstyle{CosmicStyle}{}{
+  \colorlet{backgroundcolor}    {BgPage}
+  \colorlet{framecolor}         {Aqua}
+  \colorlet{titlefgcolor}       {TxtMain}
+  \colorlet{titlebgcolor}       {BgTitle}
+  \colorlet{blocktitlebgcolor}  {BgTitle}
+  \colorlet{blocktitlefgcolor}  {Aqua}
+  \colorlet{blockbodybgcolor}   {BgBlock}
+  \colorlet{blockbodyfgcolor}   {TxtMain}
+  \colorlet{innerblocktitlebgcolor}{BgInnerT}
+  \colorlet{innerblocktitlefgcolor}{Mint}
+  \colorlet{innerblockbodybgcolor} {BgInner}
+  \colorlet{innerblockbodyfgcolor} {TxtMain}
+  \colorlet{notefgcolor}        {BgPage}
+  \colorlet{notebgcolor}        {Gold}
+  \colorlet{noteframecolor}     {Gold}
+}
+\usecolorstyle{CosmicStyle}
+\usetitlestyle{Filled}
+\useblockstyle{Slide}
+\useinnerblockstyle{Table}
+
+% ── Title ─────────────────────────────────────────────────────
+\settitle{
+  \centering\vspace{3mm}
+  {\bfseries\fontsize{54}{60}\selectfont\color{TitleLine1}
+    Solving the Time-Dependent Schr\"{o}dinger Equation}\\[4mm]
+  {\bfseries\fontsize{36}{42}\selectfont\color{TitleLine2}
+    via the Crank--Nicolson Method:\; Stability,\; Unitarity \& Efficient Linear Algebra}\\[3mm]
+  {\large\color{TxtDim}\itshape
+    A complete mathematical derivation from operator formalism
+    to tridiagonal linear systems and the Thomas algorithm}
+  \vspace{3mm}
+}
+
+% ── Macros ───────────────────────────────────────────────────
+\renewcommand{\Psi}{\varPsi}
+\newcommand{\dt}{\Delta t}
+\newcommand{\dx}{\Delta x}
+\newcommand{\calO}{\mathcal{O}}
+\newcommand{\bPsi}{\bm{\Psi}}
+\newcommand{\half}{\tfrac{1}{2}}
+
+% ── Suppress footer ──────────────────────────────────────────
+\tikzposterlatexaffectionproofoff
+
+% ════════════════════════════════════════════════════════════
 \begin{document}
-\makeatletter
-\setlength{\TP@titleinnersep}{0pt}   % removes inner padding
-\setlength{\TP@titletotopverticalspace}{0pt} % removes top gap
-\setlength{\TP@titletoblockverticalspace}{1mm} % adjust spacing after title
-\makeatother
-\maketitle
+\maketitle[titletotopverticalspace=3mm,
+           titletoblockverticalspace=6mm,
+           titleinnersep=5mm]
 
+% ════════════════════════════════════════════════════════════
 \begin{columns}
-% ==================== COLUMN 1 ====================
-\column{0.33}
+% ════════════════════════════════════════════════════════════
+%  COLUMN 1  (26%)  –  Physics & Discretization
+% ════════════════════════════════════════════════════════════
+\column{0.26}
 
-\block{1. Physical Problem: Time Evolution in Quantum Mechanics}{
-The time-dependent Schr\"odinger equation (TDSE) governs the evolution of quantum states:
+% ── 1. Physical Problem ─────────────────────────────────────
+\block{1.\enspace The Physical Problem}{
+
+The \textbf{Time-Dependent Schr\"{o}dinger Equation} (TDSE) governs
+quantum state evolution:
 \begin{equation}
-i\hbar \frac{\partial \Psi(x,t)}{\partial t}
+  \boxed{i\hbar\,\frac{\partial \Psi(x,t)}{\partial t}
+  = \hat{H}\,\Psi(x,t)
+  = \left[-\frac{\hbar^2}{2m}\frac{\partial^2}{\partial x^2}
+    + V(x)\right]\Psi(x,t)}
+\end{equation}
+
+\textbf{Formal solution} — time-evolution operator:
+\[
+  \Psi(x,t{+}\dt) \;=\;
+  \underbrace{e^{-i\hat{H}\dt/\hbar}}_{\displaystyle\hat{U}(\dt)}\,\Psi(x,t)
+\]
+
+\innerblock{\textbf{Unitarity: the Core Requirement}}{
+  $\hat{H} = \hat{H}^\dagger$ (Hermitian) $\Rightarrow$
+  $\hat{U}^\dagger\hat{U} = e^{+i\hat{H}\dt/\hbar}e^{-i\hat{H}\dt/\hbar} = \hat{I}$\\[4pt]
+  This enforces \textbf{probability conservation}:
+  \[
+    \int_{-\infty}^{+\infty}|\Psi(x,t)|^2\,dx = 1\quad\forall\, t
+  \]
+  \textit{Any valid numerical scheme must discretely replicate this.}
+}
+
+\vspace{2mm}
+The computational challenge: approximate $e^{-i\hat{H}\dt/\hbar}$
+on a finite spatial grid while keeping the discrete propagator \emph{exactly} unitary.
+}
+
+% ── 2. Discretization ───────────────────────────────────────
+\block{2.\enspace Space--Time Discretization}{
+
+Introduce a uniform grid with $N+1$ spatial and $M$ temporal points:
+\[
+  x_j = j\,\dx,\;\;
+  j=0,\ldots,N;\qquad
+  t_n = n\,\dt,\;\; n=0,1,\ldots
+\]
+
+\textbf{Central finite difference} ($2^{\rm nd}$-order, $\calO(\dx^2)$):
+\begin{equation}
+  \left.\frac{\partial^2\Psi}{\partial x^2}\right|_{x_j}
+  \approx
+  \frac{\Psi_{j+1}^n - 2\Psi_j^n + \Psi_{j-1}^n}{(\dx)^2}
+\end{equation}
+
+\textit{Derived by Taylor expansion:}\;
+$\Psi_{j\pm1} = \Psi_j \pm \dx\Psi' + \frac{(\dx)^2}{2}\Psi'' \pm \frac{(\dx)^3}{6}\Psi''' + \calO(\dx^4)$
+
+\medskip
+The \textbf{discrete Hamiltonian} $H_{FD}$ acts on the grid vector
+$\bPsi^n = [\Psi_1^n,\ldots,\Psi_{N-1}^n]^{\mathsf T}$:
+\[
+  (H_{FD}\bPsi^n)_j
+  = -\beta\Psi_{j-1}^n + (2\beta + V_j)\Psi_j^n - \beta\Psi_{j+1}^n,
+  \quad
+  \beta \equiv \frac{\hbar^2}{2m(\dx)^2}
+\]
+
+\innerblock{Boundary Conditions}{
+\begin{tabular}{@{}ll}
+  \textcolor{Gold}{\textbf{Dirichlet}} (infinite well): &
+    $\Psi_0^n = \Psi_N^n = 0$\\[3pt]
+  \textcolor{Lavender}{\textbf{Periodic}} (ring/lattice): &
+    $\Psi_0^n = \Psi_{N}^n,\;\Psi_{-1}^n=\Psi_{N-1}^n$\\[3pt]
+  \textcolor{Coral}{\textbf{Absorbing}} (open boundary): &
+    Add $-i\Gamma(x)$ to $V(x)$ near edges
+\end{tabular}
+}
+}
+
+% ════════════════════════════════════════════════════════════
+%  COLUMN 2  (37%)  –  Why Methods Fail + CN Derivation
+% ════════════════════════════════════════════════════════════
+\column{0.37}
+
+% ── 3. Method Comparison ────────────────────────────────────
+\block{3.\enspace Why Euler Schemes Fail: Von Neumann Analysis}{
+
+\textbf{Stability test:} substitute $\Psi_j^n = g^n e^{ik j\dx}$
+(Fourier mode) into each scheme and compute amplification factor $g$.
+\vspace{4mm}
+\begin{tikzpicture}[
+  every node/.style={font=\normalsize},
+  mbox/.style={draw, rounded corners=6pt, thick,
+               minimum height=3.2cm, text width=7.2cm,
+               align=left, inner sep=8pt},
+  % Stronger panel fill + dark body text (TxtMain on pale fill was invisible)
+  rbox/.style={mbox, draw=Coral, fill=Coral!42, text=BgPage},
+  gbox/.style={mbox, draw=Mint,  fill=Mint!38,  text=BgPage},
+  arr/.style={-{Stealth[length=8pt]}, very thick},
+]
+  \node[rbox] (fe) {
+    \textcolor{Coral}{\textbf{Forward Euler (FTCS)}}\\[5pt]
+    $\Psi^{n+1} = \!\left(I - \frac{i\dt}{\hbar}H\right)\!\Psi^n$\\[5pt]
+    $|g| = \!\sqrt{1+\!\left(\frac{\dt\lambda}{\hbar}\right)^{\!2}} > 1$\\[4pt]
+    \textbf{Unconditionally unstable.}\\
+    Norm grows $\to$ blows up.
+  };
+  \node[rbox, right=12mm of fe] (be) {
+    \textcolor{Coral}{\textbf{Backward Euler (BTCS)}}\\[5pt]
+    $\Psi^{n+1} = \!\left(I + \frac{i\dt}{\hbar}H\right)^{\!-1}\!\Psi^n$\\[5pt]
+    $|g| = \frac{1}{\sqrt{1+(\dt\lambda/\hbar)^2}} < 1$\\[4pt]
+    Stable, but \textbf{artificially dissipative.}\\
+    Norm decays $\Rightarrow$ violates QM.
+  };
+  \node[gbox, right=12mm of be] (cn) {
+    \textcolor{Mint}{\textbf{Crank--Nicolson}}\\[5pt]
+    Average of FTCS \& BTCS\\[5pt]
+    $|g| = \left|\dfrac{1 - i\dt\lambda/(2\hbar)}
+                       {1 + i\dt\lambda/(2\hbar)}\right| = 1$\\[4pt]
+    \textbf{Unconditionally stable.}\\
+    \textbf{Exact norm conservation.}
+  };
+  \draw[arr, color=Aqua]  (fe.east) -- (be.west)
+    node[midway,above,font=\small,color=Aqua]{implicit};
+  \draw[arr, color=Gold]  (be.east) -- (cn.west)
+    node[midway,above,font=\small,color=Gold]{symmetrize};
+\end{tikzpicture}
+
+\vspace{2mm}
+Here $\lambda$ denotes any eigenvalue of $H_{FD}$; since $H_{FD}$ is
+real-symmetric all eigenvalues are real, so $|g|=1$ holds for
+\emph{every} mode simultaneously — unconditional stability.
+}
+
+% ── 4. CN Derivation ────────────────────────────────────────
+\block{4.\enspace Crank--Nicolson: Derivation \& Cayley Transform}{
+
+Average the PDE right-hand side at levels $n$ and $n{+}1$:
+\begin{equation}
+  i\hbar\,\frac{\Psi_j^{n+1}-\Psi_j^n}{\dt}
+  \;=\;
+  \frac{1}{2}\!\left(H_{FD}\Psi_j^{n+1} + H_{FD}\Psi_j^n\right)
+  \label{eq:cn}
+\end{equation}
+Collect unknowns $(\Psi^{n+1})$ on the left, with
+$\gamma \equiv \dfrac{\dt}{2\hbar}$:
+
+\vspace{1mm}
+\begin{equation}
+  \underbrace{\bigl(I + i\gamma H\bigr)}_{\displaystyle A}
+  \,\bPsi^{n+1}
+  \;=\;
+  \underbrace{\bigl(I - i\gamma H\bigr)}_{\displaystyle B}
+  \,\bPsi^{n}
+  \label{eq:linsys}
+\end{equation}
+
+\innerblock{\textbf{The Cayley Transform \& Unitarity Proof}}{
+The CN propagator is the \textcolor{Lavender}{\textbf{Cayley transform}} of $H$:
+\[
+  U_{CN} \;=\; A^{-1}B
+  \;=\; \frac{I - i\gamma H}{I + i\gamma H}
+\]
+Since $H$ is Hermitian: $\;A^\dagger = (I+i\gamma H)^\dagger = I-i\gamma H = B.$\\[4pt]
+Therefore:
+\[
+  \boxed{\; U_{CN}^\dagger\, U_{CN}
+  = B^\dagger (A^\dagger)^{-1} A^{-1} B
+  = A \cdot A^{-1} \cdot A^{-1} \cdot A \;=\; I\;}
+\]
+\[
+  \Longrightarrow\quad
+  \|\bPsi^{n+1}\|^2 = \|\bPsi^n\|^2
+  \qquad\textbf{(exact at every time step)}
+\]
+\textit{CN is the \textbf{unique} 2-level scheme that is both $\calO(\dt^2)$
+and exactly unitary.}
+}
+
+\vspace{2mm}
+\textbf{Order of accuracy:}
+Taylor-expanding \eqref{eq:cn} gives local truncation error
+$\calO(\dt^2,\dx^2)$ — matching both spatial and temporal discretisations.
+}
+
+% ── 5. Matrix Structure ─────────────────────────────────────
+\block{5.\enspace Tridiagonal Matrix Structure of $A$ and $B$}{
+
+Let $r_j \equiv \gamma(2\beta+V_j)$ (diagonal) and $s \equiv \gamma\beta$
+(off-diagonal). The linear system \eqref{eq:linsys} reads:
+
+\[
+\underbrace{
+\!\begin{pmatrix}
+  1{+}ir_1 & -is      & 0        & \cdots & 0 \\
+  -is      & 1{+}ir_2 & -is      & \cdots & 0 \\
+  0        & -is      & 1{+}ir_3 & \cdots & 0 \\
+  \vdots   &          &          & \ddots & -is \\
+  0        & 0        & \cdots   & -is    & 1{+}ir_{N-1}
+\end{pmatrix}
+}_{A}\!
+\bPsi^{n+1}
 =
-\left[
--\frac{\hbar^2}{2m}\frac{\partial^2}{\partial x^2} + V(x)
-\right]\Psi(x,t)
-\end{equation}
-
-\textbf{Key Requirement:} The total probability must be conserved:
-\[
-\int |\Psi(x,t)|^2 dx = 1
+\underbrace{
+\!\begin{pmatrix}
+  1{-}ir_1 & +is      & 0        & \cdots & 0 \\
+  +is      & 1{-}ir_2 & +is      & \cdots & 0 \\
+  0        & +is      & 1{-}ir_3 & \cdots & 0 \\
+  \vdots   &          &          & \ddots & +is \\
+  0        & 0        & \cdots   & +is    & 1{-}ir_{N-1}
+\end{pmatrix}
+}_{B}\!
+\bPsi^{n}
 \]
 
-\textbf{Interpretation:}
-\begin{itemize}
-\item The Hamiltonian $\hat{H}$ controls energy + dynamics
-\item Evolution must be \textbf{unitary}
-\item Numerical methods must preserve norm (very important!)
-\end{itemize}
-}
-
-\block{2. Discretization of Space and Time}{
-We discretize:
-\[
-x_j = j\Delta x, \quad t_n = n\Delta t
-\]
-
-Second derivative (central difference):
-\begin{equation}
-\frac{\partial^2 \Psi}{\partial x^2}
-\approx
-\frac{\Psi_{j+1}^n - 2\Psi_j^n + \Psi_{j-1}^n}{(\Delta x)^2}
-\end{equation}
-
-\textbf{Result:} PDE $\rightarrow$ System of algebraic equations
-
-\textbf{Insight:}
-\begin{itemize}
-\item Smaller $\Delta x$ → higher spatial accuracy
-\item Smaller $\Delta t$ → better temporal resolution
-\item Tradeoff: accuracy vs computational cost
-\end{itemize}
-}
-
-\block{3. Why Standard Methods Fail}{
-\textbf{FTCS (Explicit Method):}
-\begin{itemize}
-\item Easy to implement
-\item But \textbf{unconditionally unstable}
-\item Amplifies numerical noise → blows up
-\end{itemize}
-
-\textbf{BTCS (Implicit Method):}
-\begin{itemize}
-\item Stable
-\item But introduces \textbf{artificial damping}
-\item Violates quantum probability conservation
-\end{itemize}
-
-\textbf{Conclusion:}
-We need a method that is:
-\begin{itemize}
-\item Stable
-\item Accurate
-\item Norm-preserving
-\end{itemize}
-}
-
-% ==================== COLUMN 2 ====================
-\column{0.34}
-
-\block{4. Crank–Nicolson Scheme}{
-The Crank–Nicolson method averages FTCS and BTCS:
-
-\begin{equation}
-i\hbar \frac{\Psi^{n+1}_j - \Psi^n_j}{\Delta t}
-=
-\frac{1}{2}\hat{H}_{FD}\Psi^{n+1}_j
-+
-\frac{1}{2}\hat{H}_{FD}\Psi^n_j
-\end{equation}
-
-Rewriting:
-\begin{equation}
-\left( I + \frac{i\Delta t}{2\hbar}H \right)\Psi^{n+1}
-=
-\left( I - \frac{i\Delta t}{2\hbar}H \right)\Psi^n
-\end{equation}
-
-\textbf{Key Idea:}
-\begin{itemize}
-\item Implicit + symmetric in time
-\item Second-order accurate in both space and time
-\end{itemize}
-}
-
-\block{5. Unitarity and Stability}{
-Define propagator:
-\[
-U_{CN} = (I + i\gamma H)^{-1}(I - i\gamma H)
-\]
-
-This is a \textbf{Cayley transform} of a Hermitian operator.
-
-\textbf{Result:}
-\[
-U^\dagger U = I
-\]
-
-\textbf{Implications:}
-\begin{itemize}
-\item Exact probability conservation
-\item No artificial damping
-\item No instability
-\end{itemize}
-
-\textbf{This is why CN is the gold standard for TDSE.}
-}
-
-\block{6. Matrix Formulation}{
-Let:
-\[
-\alpha = \frac{i\Delta t}{2\hbar}, \quad
-\beta = \frac{\hbar^2}{2m(\Delta x)^2}
-\]
-
-Hamiltonian becomes:
-\[
-H\Psi_j = -\beta\Psi_{j-1} + (2\beta + V_j)\Psi_j - \beta\Psi_{j+1}
-\]
-
-We obtain:
-\[
-A\Psi^{n+1} = B\Psi^n
-\]
-
-\textbf{Important:}
-\begin{itemize}
-\item $A$, $B$ are tridiagonal
-\item Only nearest-neighbour coupling
-\end{itemize}
-}
-
-% ==================== COLUMN 3 ====================
-\column{0.34}
-
-\block{7. Efficient Solution: Thomas Algorithm}{
-Instead of inverting matrices:
-
-\[
-\mathcal{O}(N^3) \rightarrow \mathcal{O}(N)
-\]
-
-\textbf{Thomas Algorithm Steps:}
-\begin{enumerate}
-\item Forward elimination
-\item Modify coefficients
-\item Back substitution
-\end{enumerate}
-
-\textbf{Why it works:}
-\begin{itemize}
-\item Exploits tridiagonal structure
-\item No unnecessary computations
-\end{itemize}
-}
-
-\block{8. Boundary Conditions}{
-\textbf{Dirichlet (Infinite Well):}
-\[
-\Psi_0 = \Psi_N = 0
-\]
-
-\textbf{Periodic:}
-\[
-\Psi_0 = \Psi_{N-1}
-\]
-
-\textbf{Physical Meaning:}
-\begin{itemize}
-\item Dirichlet → particle confined
-\item Periodic → lattice / solid-state physics
-\end{itemize}
-}
-
-\block{9. Algorithm Summary (Implementation)}{
-\textbf{Step-by-step:}
-
-\begin{enumerate}
-\item Initialize $\Psi(x,0)$
-\item Construct matrices $A$, $B$
-\item For each time step:
-\begin{itemize}
-\item Compute RHS: $B\Psi^n$
-\item Solve $A\Psi^{n+1} = RHS$
-\item Normalize (optional check)
-\end{itemize}
-\item Repeat
-\end{enumerate}
-
-\textbf{Output:} Time evolution of wavefunction
-}
-
-\block{10. Applications}{
-\begin{itemize}
-\item Quantum tunneling
-\item Wave packet propagation
-\item Quantum wells and barriers
-\end{itemize}
-
-\textbf{Takeaway:}
-Crank–Nicolson provides a perfect balance of:
 \begin{center}
-\textbf{Accuracy + Stability + Physical Correctness}
+\begin{tikzpicture}[scale=0.9]
+  % diagonal squares
+  \foreach \k in {1,2,3,4,5,6}{
+    \draw[fill=Aqua!55, draw=Aqua!80, very thick, rounded corners=1pt]
+      (\k-0.46, 7-\k+0.04) rectangle (\k+0.46, 7-\k+0.96);
+  }
+  % super-diagonal
+  \foreach \k in {1,2,3,4,5}{
+    \draw[fill=Gold!65, draw=Gold!90, very thick, rounded corners=1pt]
+      (\k+0.54, 7-\k+0.04) rectangle (\k+1.46, 7-\k+0.96);
+  }
+  % sub-diagonal
+  \foreach \k in {2,3,4,5,6}{
+    \draw[fill=Gold!65, draw=Gold!90, very thick, rounded corners=1pt]
+      (\k-1.46, 7-\k+0.04) rectangle (\k-0.54, 7-\k+0.96);
+  }
+  % zero entries (faint background)
+  \draw[draw=TxtDim!30, very thin] (0.5, 0.0) rectangle (6.5, 7.0);
+  % labels
+  \node[color=Aqua, font=\small\bfseries]   at (8.5, 5.5)
+    {\textcolor{Aqua}{$\blacksquare$}\; Main diagonal: $1 \pm ir_j$};
+  \node[color=Gold, font=\small\bfseries]   at (8.5, 4.5)
+    {\textcolor{Gold}{$\blacksquare$}\; Off-diagonals: $\mp is$};
+  \node[color=TxtDim, font=\small]          at (8.5, 3.5)
+    {\textcolor{TxtDim}{$\square$}\; Zero entries};
+  \node[color=TxtMain, font=\small\itshape] at (3.5, -0.55)
+    {Sparsity pattern of $A$ (identical structure for $B$; signs flipped)};
+\end{tikzpicture}
 \end{center}
+}
+
+% ════════════════════════════════════════════════════════════
+%  COLUMN 3  (37%)  –  Thomas Algorithm, Complexity, Summary
+% ════════════════════════════════════════════════════════════
+\column{0.37}
+
+% ── 6. Thomas Algorithm ─────────────────────────────────────
+\block{6.\enspace Thomas Algorithm — $\calO(N)$ Tridiagonal Solver}{
+
+Naïve LU decomposition costs $\calO(N^3)$.
+The Thomas algorithm exploits the \textbf{tridiagonal structure} to achieve
+$\calO(N)$ with only $\approx 8N$ floating-point operations — no fill-in.
+\medskip
+
+Let the system be $a_j\Psi_{j-1} + d_j\Psi_j + c_j\Psi_{j+1} = f_j$
+with $a_j = c_j = -is$, $d_j = 1+ir_j$.
+
+\innerblock{\textbf{Step 1 — Forward Sweep} (modify coefficients)}{
+Initialise: $\tilde d_1 = d_1,\; \tilde f_1 = f_1$.\\[4pt]
+For $j = 2, 3, \ldots, N{-}1$:
+\[
+  m_j = \frac{a_j}{\tilde d_{j-1}},
+  \qquad
+  \tilde d_j = d_j - m_j\, c_{j-1},
+  \qquad
+  \tilde f_j = f_j - m_j\, \tilde f_{j-1}
+\]
+Eliminates the sub-diagonal in $\calO(N)$ steps.
+}
+
+\vspace{2mm}
+\innerblock{\textbf{Step 2 — Back Substitution} (recover $\bPsi^{n+1}$)}{
+\[
+  \Psi_{N-1}^{n+1} = \frac{\tilde f_{N-1}}{\tilde d_{N-1}},
+  \qquad
+  \Psi_j^{n+1} = \frac{\tilde f_j - c_j\,\Psi_{j+1}^{n+1}}{\tilde d_j},
+  \quad j = N{-}2,\ldots,1
+\]
+}
+
+\vspace{4mm}
+\textbf{Full time-stepping algorithm:}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=5mm,
+  every node/.style={font=\normalsize},
+  step/.style={draw=Aqua, fill=BgBlock, rounded corners=5pt, thick,
+               text=TxtMain, minimum width=10cm, minimum height=9mm,
+               align=center, drop shadow={color=Aqua!30}},
+  check/.style={step, draw=Gold, fill=BgBlock},
+  loop/.style={step, draw=Lavender, fill=BgBlock},
+  arr/.style={-{Stealth[length=7pt]}, thick, color=Aqua},
+]
+  \node[step]  (init) {Initialise $\Psi^0(x)$;\; build $A$, $B$ once};
+  \node[step, below=of init]  (rhs)  {Compute RHS $\bm f = B\bPsi^n$};
+  \node[step, below=of rhs]   (fwd)  {Forward sweep: update $\tilde d_j$, $\tilde f_j$};
+  \node[step, below=of fwd]   (bak)  {Back substitution $\Rightarrow \bPsi^{n+1}$};
+  \node[check, below=of bak]  (chk)  {(Optional) assert $\|\bPsi^{n+1}\|\approx 1$};
+  \node[loop, below=of chk]   (adv)  {Advance: $n \leftarrow n+1$;\quad store / plot};
+
+  \foreach \a/\b in {init/rhs, rhs/fwd, fwd/bak, bak/chk, chk/adv}
+    \draw[arr] (\a) -- (\b);
+
+  % loop-back arrow
+  \draw[{Stealth[length=7pt]}-{Stealth[length=7pt]},
+        thick, color=Lavender, rounded corners=7pt]
+    (adv.east) -- ++(1.1,0) -- ++(0,5.6) -- (rhs.east);
+  \node[color=Lavender, font=\small, rotate=90] at (12.1, -2.9)
+    {time loop};
+\end{tikzpicture}
+\end{center}
+}
+
+% ── 7. Complexity Table ─────────────────────────────────────
+\block{7.\enspace Method Comparison at a Glance}{
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{@{}lcccc@{}}
+  \toprule
+  \textbf{Scheme} &
+  \textbf{Stability} &
+  \textbf{Norm} &
+  \textbf{Accuracy} &
+  \textbf{Cost/step}\\
+  \midrule
+  Forward Euler  (FTCS)
+    & \textcolor{Coral}{Unstable}
+    & \textcolor{Coral}{Grows}
+    & $\calO(\dt,\dx^2)$
+    & $\calO(N)$ \\
+  Backward Euler (BTCS)
+    & \textcolor{Gold}{Stable}
+    & \textcolor{Coral}{Decays}
+    & $\calO(\dt,\dx^2)$
+    & $\calO(N)$ \\
+  \textbf{Crank--Nicolson}
+    & \textcolor{Mint}{\textbf{Stable}}
+    & \textcolor{Mint}{\textbf{Exact}}
+    & $\calO(\dt^2,\dx^2)$
+    & $\calO(N)$ \\
+  Dense LU solve
+    & \textcolor{Mint}{Stable}
+    & \textcolor{Mint}{Exact}
+    & $\calO(\dt^2,\dx^2)$
+    & \textcolor{Coral}{$\calO(N^3)$} \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{1mm}
+CN with Thomas algorithm delivers the best possible combination:
+$\calO(N)$ cost, $\calO(\dt^2)$ accuracy, and exact unitarity — simultaneously.
+}
+
+% ── 8. Summary ──────────────────────────────────────────────
+\block{8.\enspace Summary \& Physical Significance}{
+
+\innerblock{\textbf{Complete Crank--Nicolson Recipe}}{
+  \begin{tabular}{@{} c @{\enspace} p{26.5cm}}
+    \textcolor{Aqua}{\bfseries 1.} & \textbf{Grid:} choose $\dx$, $\dt$; set $\beta=\hbar^2/(2m\dx^2)$, $\gamma=\dt/(2\hbar)$.\\[3pt]
+    \textcolor{Aqua}{\bfseries 2.} & \textbf{Matrices:} build tridiagonal $A=(1{+}i\gamma H_{FD})$ and $B=(1{-}i\gamma H_{FD})$ — \emph{once}.\\[3pt]
+    \textcolor{Aqua}{\bfseries 3.} & \textbf{Time loop:} compute $\bm f = B\bPsi^n$; solve $A\bPsi^{n+1}=\bm f$ via Thomas Algorithm.\\[3pt]
+    \textcolor{Aqua}{\bfseries 4.} & \textbf{Verify:} $\|\bPsi^{n+1}\|=1$ to machine precision (guaranteed by $U_{CN}$).
+  \end{tabular}
+}
+
+\vspace{3mm}
+\innerblock{\textbf{Why CN is the Gold Standard for TDSE}}{
+\begin{itemize}
+  \setlength\itemsep{3pt}
+  \item \textcolor{Lavender}{\textbf{Cayley form:}}
+        $U_{CN}=(I{-}i\gamma H)(I{+}i\gamma H)^{-1}$ is a
+        \emph{unitary} Pad\'e$(1,1)$ approximant to $e^{-i\hat{H}\dt/\hbar}$.
+  \item \textcolor{Mint}{\textbf{No dissipation:}}
+        wave-packet shape and phase are preserved over arbitrarily long runs.
+  \item \textcolor{Aqua}{\textbf{Second-order:}}
+        $\calO(\dt^2,\dx^2)$ — highest among two-level implicit schemes.
+  \item \textcolor{Gold}{\textbf{Applications:}}
+        tunnelling, scattering, quantum wells, laser--matter interaction,
+        spin dynamics, coupled-channel problems.
+\end{itemize}
+}
 }
 
 \end{columns}
