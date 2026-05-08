@@ -11,6 +11,7 @@
 \usepackage{amsmath,amssymb,bm,mathtools}
 \usepackage{booktabs}
 \usepackage{array}
+\usepackage{graphicx}
 \usetikzlibrary{arrows.meta, shapes.geometric, positioning,
                 fit, calc, decorations.pathreplacing, shadows}
 
@@ -62,14 +63,33 @@
 
 % == Title ===================================================
 \settitle{
-  \centering\vspace{3mm}
-  {\bfseries\fontsize{54}{60}\selectfont\color{TitleLine1}
-    Solving the Time-Dependent Schr\"{o}dinger Equation}\\[4mm]
-  {\bfseries\fontsize{36}{42}\selectfont\color{TitleLine2}
-    via the Crank--Nicolson Method:\; Stability,\; Unitarity \& Efficient Linear Algebra}\\[3mm]
-  {\large\color{TxtDim}\itshape
-    A complete mathematical derivation from operator formalism
-    to tridiagonal linear systems and the Thomas algorithm}
+  \vspace{3mm}
+  % Left Block: Names and Entry Numbers
+  \begin{minipage}[c]{0.28\linewidth}
+    \begin{flushleft}
+      \textcolor{TitleLine1}{\Large\textbf{Abhinav P J}} \hspace{0.5em} \textcolor{TxtMain}{\Large 2024CS10924} \\[3mm]
+      \textcolor{TitleLine1}{\Large\textbf{Harsh Verma}} \hspace{0.5em} \textcolor{TxtMain}{\Large 2024CS10499} \\[3mm]
+      \textcolor{TitleLine1}{\Large\textbf{Sainavaneet Mukund}} \hspace{0.5em} \textcolor{TxtMain}{\Large 2024CS10025}
+    \end{flushleft}
+  \end{minipage}%
+  % Center Block: Main Poster Title
+  \begin{minipage}[c]{0.44\linewidth}
+    \centering
+    {\bfseries\fontsize{54}{60}\selectfont\color{TitleLine1}
+      Solving the Time-Dependent Schr\"{o}dinger Equation}\\[4mm]
+    {\bfseries\fontsize{36}{42}\selectfont\color{TitleLine2}
+      via the Crank--Nicolson Method:\; Stability,\; Unitarity \& Efficient Linear Algebra}\\[3mm]
+    {\large\color{TxtDim}\itshape
+      A complete mathematical derivation from operator formalism
+      to tridiagonal linear systems and the Thomas algorithm}
+  \end{minipage}%
+  % Right Block: QR Code
+  \begin{minipage}[c]{0.28\linewidth}
+    \begin{flushright}
+      \includegraphics[width=4.5cm]{qr.png} \\[2mm]
+      \textcolor{TxtMain}{\Large\textbf{GitHub}}
+    \end{flushright}
+  \end{minipage}
   \vspace{3mm}
 }
 
@@ -91,6 +111,9 @@
 \begin{document}
 \maketitle[titletotopverticalspace=3mm,
            titletoblockverticalspace=6mm]
+
+
+
 
 % ============================================================
 \begin{columns}
@@ -230,8 +253,18 @@ real-symmetric all eigenvalues are real, so $|g|=1$ holds for
 \column{0.34}
 
 % == 4. Operator Approximation ===============================
-\block{4.\enspace Pad\'e Approximants \& The Evolution Operator}{
-
+\block{4.\enspace Crank-Nicolson \& the Pad\'e Approximants }{
+Instead of evaluating the derivative at the current \emph{or} future
+time alone, Crank-Nicolson evaluates the TDSE at the \textbf{temporal midpoint}
+$t_{n+1/2}$ by averaging the Hamiltonian at both levels:
+\begin{equation}
+  i\hbar\,\frac{\Psi_j^{n+1}-\Psi_j^n}{\dt}
+  \;=\;
+  \tfrac{1}{2}\!\left(H_{FD}\Psi_j^{n+1} + H_{FD}\Psi_j^n\right)
+  \label{eq:cn}
+\end{equation}
+\\
+\\
 The exact time-evolution operator is $\hat{U} = e^{-ix}$, where $x \equiv \hat{H}\dt/\hbar$. 
 Direct computation of the matrix exponential $e^{-i\hat{H}\dt/\hbar}$ is impractically expensive. 
 Instead, the Crank--Nicolson method employs the \textbf{Pad\'e [1,1] approximant}:
@@ -249,21 +282,13 @@ Let's compare their expansions for a small time step $x$:
 The expressions \textbf{match exactly up to $\mathcal{O}(x^2)$}. The discrepancy begins at the $\mathcal{O}(x^3)$ term, meaning the local truncation error per step is $\mathcal{O}(\dt^3)$. This makes the method \textbf{globally 2nd-order accurate} in time.
 }
 
-\vspace{2mm}
-\innerblock{\textbf{Unconditional Unitarity (Stability)}}{
-Why use a rational function instead of just truncating the Taylor series? For any real $x$ (since $\hat{H}$ is Hermitian, its eigenvalues are strictly real), the magnitude of the approximation is:
-\[
-  \boxed{\; |R(x)|^2 = R^*(x)R(x) = \left(\frac{1 + ix/2}{1 - ix/2}\right)\left(\frac{1 - ix/2}{1 + ix/2}\right) \equiv 1 \;}
-\]
-While a truncated Taylor polynomial will eventually drift off the unit circle (causing solutions to blow up or decay), the Padé [1,1] approximant maps the entire real line perfectly onto the unit circle in the complex plane. This mathematically guarantees that \textbf{probability is exactly conserved} regardless of the size of $\dt$.
-}
 }
 
 % == 5. Matrix Structure =====================================
 \block{5.\enspace Tridiagonal Matrix Structure of $A$ and $B$}{
 
 Let $r_j \equiv \gamma(2\beta+V_j)$ (diagonal) and $s \equiv \gamma\beta$
-(off-diagonal). The linear system \eqref{eq:linsys} reads:
+(off-diagonal) with $\gamma = \dt/(2\hbar)$. The linear system \eqref{eq:linsys} reads:
 
 \begin{equation}
 \label{eq:linsys}
@@ -290,36 +315,49 @@ Let $r_j \equiv \gamma(2\beta+V_j)$ (diagonal) and $s \equiv \gamma\beta$
 \bPsi^{n}
 \end{equation}
 
-\begin{center}
-\begin{tikzpicture}[scale=0.9]
-  % diagonal squares
-  \foreach \k in {1,2,3,4,5,6}{
-    \draw[fill=Aqua!55, draw=Aqua!80, very thick, rounded corners=1pt]
-      (\k-0.46, 7-\k+0.04) rectangle (\k+0.46, 7-\k+0.96);
-  }
-  % super-diagonal
-  \foreach \k in {1,2,3,4,5}{
-    \draw[fill=Gold!65, draw=Gold!90, very thick, rounded corners=1pt]
-      (\k+0.54, 7-\k+0.04) rectangle (\k+1.46, 7-\k+0.96);
-  }
-  % sub-diagonal
-  \foreach \k in {2,3,4,5,6}{
-    \draw[fill=Gold!65, draw=Gold!90, very thick, rounded corners=1pt]
-      (\k-1.46, 7-\k+0.04) rectangle (\k-0.54, 7-\k+0.96);
-  }
-  % zero entries (faint background)
-  \draw[draw=TxtDim!30, very thin] (0.5, 0.0) rectangle (6.5, 7.0);
-  % labels
-  \node[color=Aqua, font=\small\bfseries]   at (8.5, 5.5)
-    {\textcolor{Aqua}{$\blacksquare$}\; Main diagonal: $1 \pm ir_j$};
-  \node[color=Gold, font=\small\bfseries]   at (8.5, 4.5)
-    {\textcolor{Gold}{$\blacksquare$}\; Off-diagonals: $\mp is$};
-  \node[color=TxtDim, font=\small]          at (8.5, 3.5)
-    {\textcolor{TxtDim}{$\square$}\; Zero entries};
-  \node[color=TxtMain, font=\small\itshape] at (3.5, -0.55)
-    {Sparsity pattern of $A$ (identical structure for $B$; signs flipped)};
-\end{tikzpicture}
-\end{center}
+\innerblock{\textbf{Expanding the Discrete Hamiltonian}}{
+Substituting $H_{FD}\Psi_j = -\beta\Psi_{j-1} + (2\beta+V_j)\Psi_j
+- \beta\Psi_{j+1}$ into both sides of \eqref{eq:linsys},
+grouping by spatial index $j{-}1$, $j$, $j{+}1$:
+
+\smallskip
+\textbf{Left side} (future unknowns $\Psi^{n+1}$):
+\[
+  \textcolor{Aqua}{(-i\gamma\beta)}\,\Psi_{j-1}^{n+1}
+  + \textcolor{Aqua}{\bigl[1 + i\gamma(2\beta+V_j)\bigr]}\,\Psi_j^{n+1}
+  + \textcolor{Aqua}{(-i\gamma\beta)}\,\Psi_{j+1}^{n+1}
+\]
+\textbf{Right side} (present knowns $\Psi^{n}$):
+\[
+  \textcolor{Gold}{(+i\gamma\beta)}\,\Psi_{j-1}^{n}
+  + \textcolor{Gold}{\bigl[1 - i\gamma(2\beta+V_j)\bigr]}\,\Psi_j^{n}
+  + \textcolor{Gold}{(+i\gamma\beta)}\,\Psi_{j+1}^{n}
+\]
+}
+
+% --- THREE SIDE-BY-SIDE IMAGES IMPLEMENTATION ---
+
+
+\begin{minipage}{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{frame_0128.png}
+    
+    {\small (a) Frame 1}
+\end{minipage}\hfill
+\begin{minipage}{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{frame_0290.png}
+    
+    {\small (b) Frame 2}
+\end{minipage}\hfill
+\begin{minipage}{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{frame_0329.png}
+    
+    {\small (c) Frame 3}
+\end{minipage}
+
+
 }
 
 % ============================================================
@@ -438,33 +476,27 @@ $\calO(N)$ cost, $\calO(\dt^2)$ accuracy, and exact unitarity - simultaneously.
 
 % == 8. Summary ==============================================
 \block{8.\enspace Summary \& Physical Significance}{
-
-\innerblock{\textbf{Complete Crank--Nicolson Recipe}}{
+\vspace{-20mm}
+\innerblock{\textbf{Crank--Nicolson Recipe}}{
   \begin{tabular}{@{} c @{\enspace} p{26.5cm}}
-    \textcolor{Aqua}{\bfseries 1.} & \textbf{Grid:} choose $\dx$, $\dt$; set $\beta=\hbar^2/(2m\dx^2)$, $\gamma=\dt/(2\hbar)$.\\[3pt]
-    \textcolor{Aqua}{\bfseries 2.} & \textbf{Matrices:} build tridiagonal $A=(1{+}i\gamma H_{FD})$ and $B=(1{-}i\gamma H_{FD})$ - \emph{once}.\\[3pt]
-    \textcolor{Aqua}{\bfseries 3.} & \textbf{Time loop:} compute $\bm f = B\bPsi^n$; solve $A\bPsi^{n+1}=\bm f$ via Thomas Algorithm.\\[3pt]
-    \textcolor{Aqua}{\bfseries 4.} & \textbf{Verify:} $\|\bPsi^{n+1}\|=1$ to machine precision (guaranteed by $U_{CN}$).
+    \textcolor{Aqua}{\bfseries 1.} & \textbf{Setup:} set grid $\dx$, $\dt$ and $\gamma=\dt/(2\hbar)$.\\[3pt]
+    \textcolor{Aqua}{\bfseries 2.} & \textbf{Matrices:} build tridiagonal $A, B = I \pm i\gamma H_{FD}$ just \emph{once}.\\[3pt]
+    \textcolor{Aqua}{\bfseries 3.} & \textbf{Iterate:} solve $A\bPsi^{n+1} = B\bPsi^n$ using the $\calO(N)$ Thomas Algorithm.
   \end{tabular}
 }
 
-\vspace{3mm}
-\innerblock{\textbf{Why CN is the Gold Standard for TDSE}}{
+\vspace{-9mm}
+\innerblock{\textbf{Why CN is the Gold Standard}}{
 \begin{itemize}
   \setlength\itemsep{3pt}
-  \item \textcolor{Lavender}{\textbf{Cayley form:}}
-        $U_{CN}=(I{-}i\gamma H)(I{+}i\gamma H)^{-1}$ is a
-        \emph{unitary} Pad\'e$(1,1)$ approximant to $e^{-i\hat{H}\dt/\hbar}$.
-  \item \textcolor{Mint}{\textbf{No dissipation:}}
-        wave-packet shape and phase are preserved over arbitrarily long runs.
-  \item \textcolor{Aqua}{\textbf{Second-order:}}
-        $\calO(\dt^2,\dx^2)$ - highest among two-level implicit schemes.
-  \item \textcolor{Gold}{\textbf{Applications:}}
-        tunnelling, scattering, quantum wells, laser-matter interaction,
-        spin dynamics, coupled-channel problems.
+  \item \textcolor{Lavender}{\textbf{Unitary:}}
+        Pad\'e(1,1) approximant exactly conserves probability ($\|\bPsi\|=1$).
+  \item \textcolor{Mint}{\textbf{Stable:}}
+        Unconditionally stable without artificially dissipating the wave-packet.
+  \item \textcolor{Aqua}{\textbf{Accurate:}}
+        $\calO(\dt^2,\dx^2)$ -- second-order accuracy in space and time.
 \end{itemize}
 }
 }
-
 \end{columns}
-\end{document}
+\end{document}  
