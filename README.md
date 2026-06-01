@@ -1,1 +1,3 @@
-[![Watch the video](https://raw.githubusercontent.com/AbhinavPJ/Crank-Nicholson-Method-for-solving-TDSE/main/results/thumbnail.png)](https://raw.githubusercontent.com/AbhinavPJ/Crank-Nicholson-Method-for-solving-TDSE/main/results/simulation_cycle.mp4)
+<video controls width="100%">
+  <source src="results/simulation_cycle.mp4" type="video/mp4">
+</video>
